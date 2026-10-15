@@ -19,11 +19,10 @@ import numpy as np
 from constants import ELECTRON_MASS, HBAR, ev_to_joule, nm_to_m
 
 
-def transmission_numeric(E_eV, V0_eV, width_nm):
-    """Return (T, R) for a rectangular barrier with 0 < E < V0.
+def _solve_coefficients(E_eV, V0_eV, width_nm):
+    """Solve the matching system; return (r, A_scaled, B, t, k, kappa, a) in SI.
 
-    Inputs are scalars in eV and nm. T = |t|^2 and R = |r|^2.
-    Raises ValueError unless 0 < E < V0 and width >= 0 (all finite).
+    A_scaled = A * exp(kappa a). Raises ValueError for invalid inputs.
     """
     E_eV = float(E_eV)
     V0_eV = float(V0_eV)
@@ -62,5 +61,35 @@ def transmission_numeric(E_eV, V0_eV, width_nm):
     )
     rhs = np.array([-1.0, -1j * k, 0.0, 0.0], dtype=complex)
 
-    r, _, _, t = np.linalg.solve(M, rhs)
+    r, A_scaled, B, t = np.linalg.solve(M, rhs)
+    return r, A_scaled, B, t, k, kappa, a
+
+
+def transmission_numeric(E_eV, V0_eV, width_nm):
+    """Return (T, R) for a rectangular barrier with 0 < E < V0.
+
+    Inputs are scalars in eV and nm. T = |t|^2 and R = |r|^2.
+    Raises ValueError unless 0 < E < V0 and width >= 0 (all finite).
+    """
+    r, _, _, t, _, _, _ = _solve_coefficients(E_eV, V0_eV, width_nm)
     return float(abs(t) ** 2), float(abs(r) ** 2)
+
+
+def wavefunction_numeric(E_eV, V0_eV, width_nm, x_nm):
+    """Complex wavefunction psi(x) (incident amplitude 1) at positions x_nm.
+
+    Uses the same matched coefficients as transmission_numeric. Region II is
+    evaluated as A' exp(kappa (x - a)) + B exp(-kappa x) so exp(kappa x) is
+    never formed for thick barriers.
+    """
+    r, A_s, B, t, k, kappa, a = _solve_coefficients(E_eV, V0_eV, width_nm)
+    x = nm_to_m(np.asarray(x_nm, dtype=float))
+    psi = np.empty(x.shape, dtype=complex)
+
+    left = x < 0.0
+    mid = (x >= 0.0) & (x <= a)
+    right = x > a
+    psi[left] = np.exp(1j * k * x[left]) + r * np.exp(-1j * k * x[left])
+    psi[mid] = A_s * np.exp(kappa * (x[mid] - a)) + B * np.exp(-kappa * x[mid])
+    psi[right] = t * np.exp(1j * k * x[right])
+    return psi

@@ -181,3 +181,7 @@ All numbers below come from `results/comparison.csv`, produced by `python -m src
 ## License
 
 MIT. See `LICENSE`.
+
+## Technical report
+[Read the full report (PDF)](report/quantum_tunneling_report.pdf)
+

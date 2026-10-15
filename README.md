@@ -172,12 +172,6 @@ All numbers below come from `results/comparison.csv`, produced by `python -m src
 - **Transient Matplotlib mathtext errors in the Streamlit terminal.** Moving the sliders quickly can start overlapping script reruns in different threads. Matplotlib's mathtext parser (used for log-axis tick labels) is not thread-safe, which previously printed `ParseFatalException: Unknown symbol: \mathdefault` and `ParseException` tracebacks in the terminal. `app.py` now builds and renders each figure while holding a module-level lock and uses `matplotlib.figure.Figure` rather than pyplot global state. A thread-stress test (`tests/test_app.py`) covers this. I have not confirmed in a long interactive browser session that the messages never appear. If you still see them, they are transient and the app should recover on the next rerun.
 - `src/` modules import each other with flat imports (for example `from constants import ...`). `sweeps.py`, `plots.py`, `app.py` and the tests add `src/` to `sys.path` to make this work, so the modules are not packaged for use as an installed library.
 
-## My contributions and AI use
-
-- **What I did:** [Describe your own contribution here: for example, defining the research question, choosing the sweep parameters, reviewing the results, and running the code.]
-- **What AI tools did:** [State honestly which AI tools were used and for what, for example writing code, tests, plots, the Streamlit app, or this README.]
-- **How I checked the AI-assisted work:** [Describe how you verified it, for example reading the code, running the tests, comparing with the textbook formula, or inspecting the figures.]
-- **What I understand and can explain:** [List the parts you can explain yourself, for example the derivation of T, the meaning of kappa, and why the two methods agree.]
 
 ## References
 
